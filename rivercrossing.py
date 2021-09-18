@@ -1,38 +1,78 @@
-import time
+# Used example: https://stackoverflow.com/questions/64974829/search-not-working-for-river-crossing-problem-in-python
+import copy
 
-left = ["F", "G", "C", "W"]
-right = []
+# Character positions
+F = 0
+G = 1
+C = 2
+W = 3
 
-rules = {
-    "G":["C", "W"],
-    "W":["G"],
-    "C":["G"],
-}
+# Starting state
+START = ["L", "L", "L", "L"]
 
-def printStates():
-    print('States:')
-    print('left: ', left)
-    print('right: ', right)
-    print()
+# Ending
+def is_goal(node):
+    return node == ["R", "R", "R", "R"]
 
+# Rules
+def checkRuleWolf(node):
+    return node[F] == node[W] or node[W] != node[G] 
+
+def checkRuleGoat(node):
+    return node[F] == node[G] or node[G] != node[C] 
+
+def checkRules(node):
+    return checkRuleGoat(node) and checkRuleWolf(node)
+
+def checkMoves(moves):
+    return [ move for move in moves if checkRules(move)]
+
+# Get next nodes
+def successors(node):
+    for character in [F, G, C, W]:
+        if node[F] == node[character]:
+            move = copy.copy(node)
+            move[F] = 'L' if node[F] == 'R' else 'R'
+            move[character] = 'L' if node[character] == 'R' else 'R'
+            yield move # More memory efficient, handles per move instead of returning a whole list at once
+
+# Depth First Search
+def find_all_paths(node, path = []):
+    path += [node]
+
+    if is_goal(node):
+        return [path]
+    
+    paths = [] # a list of paths
+    
+    for child in checkMoves(successors(node)):
+        # If not in current path
+        if child not in path:
+            # return list of paths from here
+            newpaths = find_all_paths(child, path)
+
+            # add every path found to paths
+            for newpath in newpaths:
+                paths.append(newpath)
+            
+            if len(paths) > 0:
+                break;
+
+    return paths
+
+
+
+# Start program
 if __name__ == "__main__":    
-    run = True
-    while run:
-        printStates()
-        right.insert(0, left.pop(0))
+    assert(checkRuleWolf(["L", "L", "L", "L"]) == True)
+    assert(checkRuleWolf(["R", "L", "R", "L"]) == False)
+    assert(checkRuleWolf(["R", "L", "L", "R"]) == True)
+    
+    assert(checkRules(["L", "L", "L", "L"]) == True)
+    assert( list(checkMoves(successors(START))) == [['R','R','L','L']]  )
 
-        for rule in rules[left[0]]:
-            if rule in right: 
-                left.append(right.pop(right.index(rule)))
-                break
+    # print(list(successors(START)))
+    assert( list(successors(START)) == [['R','L','L','L'],['R','R','L','L'],['R','L','R','L'],['R','L','L','R']]  )
 
-        right.append(left.pop(0))
-        
-        if len(left) > 0:
-            printStates()
-            left.insert(0, right.pop(0))
-        else:
-            run = False
-        time.sleep(1)
-    print('Done')
-    printStates()
+    for path in find_all_paths(START)[0]:
+        print(path)
