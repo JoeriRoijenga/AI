@@ -10,7 +10,7 @@ W = 3
 # Starting state
 START = ["L", "L", "L", "L"]
 
-# Ending
+# Moment when all characters are on the right side
 def is_goal(node):
     return node == ["R", "R", "R", "R"]
 
@@ -55,6 +55,7 @@ def find_all_paths(node, path = []):
             for newpath in newpaths:
                 paths.append(newpath)
             
+            # After finding the correct path, it add faulthy data
             if len(paths) > 0:
                 break;
 
@@ -69,10 +70,10 @@ if __name__ == "__main__":
     assert(checkRuleWolf(["R", "L", "L", "R"]) == True)
     
     assert(checkRules(["L", "L", "L", "L"]) == True)
-    assert( list(checkMoves(successors(START))) == [['R','R','L','L']]  )
 
-    # print(list(successors(START)))
-    assert( list(successors(START)) == [['R','L','L','L'],['R','R','L','L'],['R','L','R','L'],['R','L','L','R']]  )
+    assert(list(successors(START)) == [['R','L','L','L'],['R','R','L','L'],['R','L','R','L'],['R','L','L','R']])
+    assert(list(checkMoves(successors(START))) == [['R','R','L','L']])
 
+    # Print every single step
     for path in find_all_paths(START)[0]:
         print(path)
