@@ -4,7 +4,8 @@ import model as mo
 import config as cf
 
 # global var
-START_FLAG = True # do not redraw grid when pressing start the first time
+START_FLAG = True  # do not redraw grid when pressing start the first time
+
 
 class MainApp(tk.Frame):
     # frame for the grid (subclass of tk.Frame)
@@ -23,30 +24,31 @@ class MainApp(tk.Frame):
         self.re_plot()
 
     def pause(self):
-        self.root.after(int(self.delay.get()) * 25) # pause in msec
-        self.root.update_idletasks() # redraw widgets
+        self.root.after(int(self.delay.get()) * 25)  # pause in msec
+        self.root.update_idletasks()  # redraw widgets
 
     def make_grid_panel(self):
         # init grid frame (and canvas)
         left_frame = tk.Frame(self.root)
         left_frame.grid(column=0, row=0, padx=3, pady=12)
-        self.canvas = tk.Canvas(left_frame, height=cf.H+4*cf.TR, width=cf.W+4*cf.TR, borderwidth=-cf.TR, bg = cf.BG_C)
+        self.canvas = tk.Canvas(left_frame, height=cf.H + 4 * cf.TR, width=cf.W + 4 * cf.TR, borderwidth=-cf.TR,
+                                bg=cf.BG_C)
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
     def make_grid(self):
         # vertical lines
-        for i in range(0, cf.W+1, cf.CELL):
-            self.canvas.create_line(i+cf.TR, 0+cf.TR, i+cf.TR, cf.H+cf.TR, fill = cf.GRID_C)
+        for i in range(0, cf.W + 1, cf.CELL):
+            self.canvas.create_line(i + cf.TR, 0 + cf.TR, i + cf.TR, cf.H + cf.TR, fill=cf.GRID_C)
         # horizontal lines
-        for i in range(0, cf.H+1, cf.CELL):
-            self.canvas.create_line(0+cf.TR, i+cf.TR, cf.W+cf.TR, i+cf.TR, fill = cf.GRID_C)
+        for i in range(0, cf.H + 1, cf.CELL):
+            self.canvas.create_line(0 + cf.TR, i + cf.TR, cf.W + cf.TR, i + cf.TR, fill=cf.GRID_C)
 
     def init_grid(self):
         for x in range(cf.SIZE):
             for y in range(cf.SIZE):
                 node = (x, y)
                 if mo.bernoulli_trial(self):
-                    mo.set_grid_value(node, 'b') # set as blocked
+                    mo.set_grid_value(node, 'b')  # set as blocked
                     self.plot_node(node, color=cf.BLOCK_C)
                 else:
                     mo.set_grid_value(node, -1)  # init costs, -1 means infinite
@@ -56,15 +58,16 @@ class MainApp(tk.Frame):
         mo.set_grid_value(cf.GOAL, -1)
 
     def plot_line_segment(self, x0, y0, x1, y1, color):
-        self.canvas.create_line(x0*cf.CELL+cf.TR, y0*cf.CELL+cf.TR, x1*cf.CELL+cf.TR, y1*cf.CELL+cf.TR, fill = color, width = 2)
+        self.canvas.create_line(x0 * cf.CELL + cf.TR, y0 * cf.CELL + cf.TR, x1 * cf.CELL + cf.TR, y1 * cf.CELL + cf.TR,
+                                fill=color, width=2)
 
     def plot_node(self, node, color):
         # size of (red) square is 8 by 8
-        x0 = node[0]*cf.CELL - 4
-        y0 = node[1]*cf.CELL - 4
+        x0 = node[0] * cf.CELL - 4
+        y0 = node[1] * cf.CELL - 4
         x1 = x0 + 8 + 1
         y1 = y0 + 8 + 1
-        self.canvas.create_rectangle(x0+cf.TR, y0+cf.TR, x1+cf.TR, y1+cf.TR, fill = color)
+        self.canvas.create_rectangle(x0 + cf.TR, y0 + cf.TR, x1 + cf.TR, y1 + cf.TR, fill=color)
 
     def make_control_panel(self):
         # note: self.alg is an instance variable, and lf1 is a local variable
@@ -92,7 +95,7 @@ class MainApp(tk.Frame):
         def select_alg():
             # print selected algorithm
             print('algorithm =', self.alg.get())
-        
+
         # create a single radio button and bind it to variable and command
         r1_button = tk.Radiobutton(lf1, text='UC', variable=self.alg, value='UC', command=select_alg)
         r1_button.grid(column=1, row=3, columnspan=2, sticky='w')
@@ -116,17 +119,17 @@ class MainApp(tk.Frame):
         tk.Label(lf2, text="Delay").grid(column=1, row=1, sticky='w')
         box1 = ttk.Combobox(lf2, textvariable=self.delay, state='readonly', width=6)
         box1.grid(column=1, row=2, sticky='w')
-        box1['values'] = tuple(str(i) for i in range(5)) # can select 0..4
-        box1.current(1) # set to 1
+        box1['values'] = tuple(str(i) for i in range(5))  # can select 0..4
+        box1.current(1)  # set to 1
         box1.bind("<<ComboboxSelected>>", box_update1)
 
         # within lf2, create label and combobox for probability value
         tk.Label(lf2, text="Prob. blocking").grid(column=1, row=3, sticky='w')
         box2 = ttk.Combobox(lf2, textvariable=self.prob, state='readonly', width=6)
         box2.grid(column=1, row=4, sticky='ew')
-        box2['values'] = tuple(str(i) for i in range(5)) # can select 0..4
-        box2.current(2) # set to 2
-        box2.bind("<<ComboboxSelected>>", box_update2)  
+        box2['values'] = tuple(str(i) for i in range(5))  # can select 0..4
+        box2.current(2)  # set to 2
+        box2.bind("<<ComboboxSelected>>", box_update2)
 
     def re_plot(self):
         # (re)paint grid and nodes
@@ -144,6 +147,7 @@ class MainApp(tk.Frame):
             prev = path[current]
             self.plot_line_segment(prev[0], prev[1], current[0], current[1], color=cf.FINAL_C)
             current = prev
+
 
 # create and start GUI
 root = tk.Tk()
