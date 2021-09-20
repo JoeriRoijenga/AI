@@ -95,7 +95,6 @@ class MainApp(tk.Frame):
         def select_alg():
             # print selected algorithm
             print('algorithm =', self.alg.get())
-
         # create a single radio button and bind it to variable and command
         r1_button = tk.Radiobutton(lf1, text='UC', variable=self.alg, value='UC', command=select_alg)
         r1_button.grid(column=1, row=3, columnspan=2, sticky='w')

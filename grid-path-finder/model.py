@@ -2,6 +2,7 @@ import random
 import heapq
 import math
 import config as cf
+from time import sleep
 
 # global var
 grid = [[0 for x in range(cf.SIZE)] for y in range(cf.SIZE)]
@@ -41,7 +42,14 @@ def set_grid_value(node, value):
 
 
 def heuristic(start, goal):
-    return abs(goal[0] - start[0]) + abs(goal[1] - start[1])
+    # https://stackoverflow.com/questions/46974075/a-star-algorithm-distance-heuristics
+    D = 1
+    D2 = math.sqrt(2)
+
+    dx = goal[0] - start[0]
+    dy = goal[1] - start[1]
+
+    return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
 
 
 def get_cost(node):
@@ -87,17 +95,14 @@ def get_neighbours(node):
 
 
 def search(app, start, goal):
+    print(heuristic((0, 0), (3, 3)))
     # plot a sample path for demonstration
-    print(get_neighbours((0, 0)))
-    print(heuristic(start, goal))
 
     priority_queue = PriorityQueue()
 
     final_path = {}
 
     visited = []
-    closed = []
-    new_cost = 0
 
     priority_queue.put(start, 0)
 
@@ -109,16 +114,19 @@ def search(app, start, goal):
 
         # If the goal is reached
         if current_node == goal:
-            print("Found")
+            print(final_path)
             draw_line(app, final_path)
+            break
 
         visited.append(current_node)
 
         for neighbour in neighbours:
-            new_cost = get_cost(current_node) + heuristic(current_node, goal)
-            print(current_node, neighbour, heuristic(neighbour, goal))
-            if neighbour not in visited or new_cost < get_cost(neighbour) + heuristic(neighbour, goal):
-                print("Found new path")
+
+            new_cost = heuristic(current_node, goal)
+            print(neighbour, new_cost)
+
+            if neighbour not in visited or new_cost < heuristic(neighbour, goal):
+
                 priority = new_cost + heuristic(neighbour, goal)
                 priority_queue.put(neighbour, priority)
 
