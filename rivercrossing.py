@@ -9,6 +9,7 @@ W = 3
 
 # Starting state
 START = ["L", "L", "L", "L"]
+GOAL = ["R", "R", "R", "R"]
 
 # Moment when all characters are on the right side
 def is_goal(node):
@@ -36,31 +37,27 @@ def successors(node):
             move[character] = 'L' if node[character] == 'R' else 'R'
             yield move # More memory efficient, handles per move instead of returning a whole list at once
 
+
 # Depth First Search
-def find_all_paths(node, path = []):
-    path += [node]
+def find_all_paths(node, goal, path=None):
+    if path is None:
+        path = []
+
+    path.append(node)
 
     if is_goal(node):
-        return [path]
-    
-    paths = [] # a list of paths
-    
-    for child in checkMoves(successors(node)):
-        # If not in current path
-        if child not in path:
-            # return list of paths from here
-            newpaths = find_all_paths(child, path)
+        return path
+    else:
+        for child in checkMoves(successors(node)):
+            print("Node:")
+            print(node)
+            print("Child:")
+            print(child)
+            print("--------------------")
+            if child not in path:
+                find_all_paths(child, goal, path)
 
-            # add every path found to paths
-            for newpath in newpaths:
-                paths.append(newpath)
-            
-            # After finding the correct path, it add faulthy data
-            if len(paths) > 0:
-                break;
-
-    return paths
-
+    path.pop()
 
 
 # Start program
@@ -74,6 +71,8 @@ if __name__ == "__main__":
     assert(list(successors(START)) == [['R','L','L','L'],['R','R','L','L'],['R','L','R','L'],['R','L','L','R']])
     assert(list(checkMoves(successors(START))) == [['R','R','L','L']])
 
+    visited = {}
+    path = []
+
     # Print every single step
-    for path in find_all_paths(START)[0]:
-        print(path)
+    find_all_paths(START, GOAL, path)
