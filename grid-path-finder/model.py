@@ -43,8 +43,8 @@ def set_grid_value(node, value):
 
 def heuristic(start, goal):
     # https://stackoverflow.com/questions/46974075/a-star-algorithm-distance-heuristics
-    D = 1
-    D2 = math.sqrt(2)
+    D = 1 # Estimated cost between nodes
+    D2 = math.sqrt(2) # Estimated cost when it's a straight line
 
     dx = abs(goal[0] - start[0])
     dy = abs(goal[1] - start[1])
