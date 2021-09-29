@@ -169,7 +169,7 @@ def get_random_move():
 
 def get_expectimax_move(b, depth, player):
     if depth == 0:
-        return -1, heuristic_corner(b) + heuristic_monotonicity(b) + heuristic_empty_cells(b)
+        return -1, (heuristic_monotonicity(b) * .8) + (heuristic_empty_cells(b) * 3.4) + (heuristic_corner(b) * 5)
 
     if player is True:
         best_value = -100000
@@ -221,18 +221,6 @@ def heuristic_empty_cells(b):
     return total_value
 
 
-def heuristic_penalty(b):
-    penalty = 0
-
-    # Try to cluster the highest together
-    for x in range(4):
-        for y in range(4):
-            for neighbour in get_neighbours(b, x, y):
-                penalty = penalty + (b[x][y] - neighbour)
-
-    return penalty
-
-
 def heuristic_monotonicity(b):
     total_value = 0
 
@@ -251,15 +239,15 @@ def heuristic_monotonicity(b):
     return total_value
 
 
-def get_neighbours(matrix, rowNumber, colNumber):
+def get_neighbours(matrix, x, y):
     result = []
     for rowAdd in range(-1, 2):
-        newRow = rowNumber + rowAdd
-        if newRow >= 0 and newRow <= len(matrix)-1:
-            for colAdd in range(-1, 2):
-                newCol = colNumber + colAdd
-                if newCol >= 0 and newCol <= len(matrix)-1:
-                    if newCol == colNumber and newRow == rowNumber:
+        new_row = x + rowAdd
+        if 0 <= new_row <= len(matrix)-1:
+            for col_add in range(-1, 2):
+                new_col = y + col_add
+                if 0 <= new_col <= len(matrix)-1:
+                    if new_col == y and new_row == x:
                         continue
-                    result.append(matrix[newCol][newRow])
+                    result.append(matrix[new_col][new_row])
     return result
