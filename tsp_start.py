@@ -42,6 +42,22 @@ def make_cities(n, width=1000, height=1000):
     return frozenset(City(random.randrange(width), random.randrange(height)) for c in range(n))
 
 
+def two_opt_swap(tour, i, j):
+    # Do nothing, just return the current tour
+    if len(tour[i:j]) == 1:
+        return tour
+
+    # Swap the two elements and return the new tour
+    if len(tour[i:j]) == 2:
+        tour[i], tour[j] = tour[j], tour[i]
+
+    # Take this small list, reverse it and put it back in the original list
+    if len(tour[i:j]) == 3:
+        tour[i:j] = tour[i:j:]
+
+    return tour
+
+
 def two_opt(tour):
     best = tour.copy()
     improved = True
@@ -54,7 +70,9 @@ def two_opt(tour):
 
                 # Create a new possible tour
                 new_tour = tour.copy()
-                new_tour[i:j] = tour[j-1:i-1:-1]
+                new_tour = two_opt_swap(new_tour, i, j)
+
+                # Check if this tour is shorter the the current tour
                 if tour_length(new_tour) < tour_length(best):
                     best = new_tour
                     improved = True
@@ -111,7 +129,7 @@ def plot_tsp(algorithm, cities):
 
 # give a demo with 10 cities using brute force
 # plot_tsp(try_all_tours, make_cities(10))
-plot_tsp(nearest_neighbour, make_cities(10))  # 100 - (2521.9 / 3230.6 * 100) = 21.9% difference
+plot_tsp(nearest_neighbour, make_cities(100))  # 100 - (2521.9 / 3230.6 * 100) = 21.9% difference
 # plot_tsp(nearest_neighbour, make_cities(500))  # Time: 1.922 seconds, length: 20457, About 4*N crossings
 # Without two-opt: 20980 in 0.750 seconds
 # With two-opt: 20672 in 89.375 seconds
