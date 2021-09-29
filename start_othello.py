@@ -1,3 +1,8 @@
+# http://dhconnelly.com/paip-python/docs/paip/othello.html#strategies
+# https://blog.theofekfoundation.org/artificial-intelligence/2015/12/18/minimax-improvements/
+import random
+import time
+
 """
 
 Othello is a turn-based two-player strategy board game.
@@ -31,7 +36,7 @@ This representation has two useful properties:
 """
 
 # The black and white pieces represent the two players.
-EMPTY, BLACK, WHITE, OUTER = '.', '@', 'o', '?'
+EMPTY, BLACK, WHITE, OUTER = '.', 'X', 'O', '?'
 PIECES = (EMPTY, BLACK, WHITE, OUTER)
 PLAYERS = {BLACK: 'Black', WHITE: 'White'}
 
@@ -40,6 +45,19 @@ UP, DOWN, LEFT, RIGHT = -10, 10, -1, 1
 UP_RIGHT, DOWN_RIGHT, DOWN_LEFT, UP_LEFT = -9, 11, 9, -11
 # in total 8 directions.
 DIRECTIONS = (UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT)
+
+SQUARE_WEIGHTS = [
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0, 120, -20,  20,   5,   5,  20, -20, 120,   0,
+    0, -20, -40,  -5,  -5,  -5,  -5, -40, -20,   0,
+    0,  20,  -5,  15,   3,   3,  15,  -5,  20,   0,
+    0,   5,  -5,   3,   3,   3,   3,  -5,   5,   0,
+    0,   5,  -5,   3,   3,   3,   3,  -5,   5,   0,
+    0,  20,  -5,  15,   3,   3,  15,  -5,  20,   0,
+    0, -20, -40,  -5,  -5,  -5,  -5, -40, -20,   0,
+    0, 120, -20,  20,   5,   5,  20, -20, 120,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+]
 
 def squares():
     # list all the valid squares on the board.
@@ -155,15 +173,133 @@ def any_legal_move(player, board):
 
 def play(black_strategy, white_strategy):
     # play a game of Othello and return the final board and score
+    board = initial_board()
+    player = BLACK
+    strategy = lambda who: black_strategy if who == BLACK else white_strategy
+    while player is not None:
+        move = get_move(strategy(player), player, board)
+        make_move(move, player, board)
+        player = next_player(board, player)
+    return board, score(board)
 
 def next_player(board, prev_player):
     # which player should move next?  Returns None if no legal moves exist
+    opp = opponent(prev_player)
+    if any_legal_move(opp, board):
+        return opp
+    elif any_legal_move(prev_player, board):
+        return prev_player
+    return None
 
 def get_move(strategy, player, board):
     # call strategy(player, board) to get a move
+    copy = list(board) # copy the board to prevent cheating
+    move = strategy(player, copy)
+    if not is_valid(move) or not is_legal(move, player, board):
+        raise IllegalMoveError(player, move, copy)
+    return move
 
-def score(player, board):
+
+def score(board):
     # compute player's score (number of player's pieces minus opponent's)
+    black, white = 0, 0
+    opp = opponent(BLACK)
+    for sq in squares():
+        piece = board[sq]
+        if piece == BLACK: black += 1
+        elif piece == opp: white += 1
+    return [black, white]
+
+def scoreStrat(player, board):
+    mine, theirs = 0, 0
+    opp = opponent(player)
+    for sq in squares():
+        piece = board[sq]
+        if piece == player: mine += 1
+        elif piece == opp: theirs += 1
+    return mine - theirs
 
 # Play strategies
+def random_strategy(player, board):
+    return random.choice(legal_moves(player, board))
 
+# Minimax
+def minimax(player, board, depth, evaluate):
+    def value(board):
+        return -minimax(opponent(player), board, depth-1, evaluate)[0]
+
+    if depth == 0:
+        return evaluate(player, board), None
+
+    moves = legal_moves(player, board)
+    
+    if not moves:
+        if not any_legal_move(opponent(player), board):
+            return final_value(player, board), None
+        return value(board), None
+    return max((value(make_move(m, player, list(board))), m) for m in moves)
+
+# Function to start minimax
+def minimax_searcher(depth, evaluate):
+    def strategy(player, board):
+        return minimax(player, board, depth, evaluate)[1]
+    return strategy
+
+
+# Pruning with alphabeta
+def alphabeta(player, board, alpha, beta, depth, evaluate):
+    if depth == 0:
+        return evaluate(player, board), None
+
+    def value(board, alpha, beta):
+        return -alphabeta(opponent(player), board, -beta, -alpha, depth-1, evaluate)[0]
+    
+    moves = legal_moves(player, board)
+    if not moves:
+        if not any_legal_move(opponent(player), board):
+            return final_value(player, board), None
+        return value(board, alpha, beta), None
+    
+    best_move = moves[0]
+    for move in moves:
+        if alpha >= beta:
+            break
+        
+        val = value(make_move(move, player, list(board)), alpha, beta)
+        if val > alpha:
+            alpha = val
+            best_move = move
+    
+    return alpha, best_move
+
+# Function to call alphabeta (pruning)
+def alphabeta_searcher(depth, evaluate):
+    def strategy(player, board):
+        return alphabeta(player, board, MIN_VALUE, MAX_VALUE, depth, evaluate)[1]
+
+    return strategy
+
+# Check for which value is best choice
+MAX_VALUE = sum(map(abs, SQUARE_WEIGHTS))
+MIN_VALUE = -MAX_VALUE
+
+def final_value(player, board):
+    diff = scoreStrat(player, board)
+    if diff < 0:
+        return MIN_VALUE
+    elif diff > 0:
+        return MAX_VALUE
+    return diff
+
+# Start of game
+if __name__ == "__main__":
+    start_time = time.time()
+    board, scores = play(alphabeta_searcher(6, final_value), random_strategy) # depth of 6 is +- 3 seconds
+    # board, scores = play(minimax_searcher(3, final_value), random_strategy) # depth of 3 stays below 2 seconds
+    end_time = time.time()
+    
+    print(print_board(board))
+    print("black: " + str(scores[0]))
+    print("white: " + str(scores[1]))
+
+    print("runtime: " + str(end_time - start_time))
