@@ -42,14 +42,36 @@ def make_cities(n, width=1000, height=1000):
     return frozenset(City(random.randrange(width), random.randrange(height)) for c in range(n))
 
 
-def nearest_neighbour(cities, current_city=None, visited=[]):
+def two_opt(tour):
+    best = tour.copy()
+    improved = True
+    # Repeat until no improvement is made anymore
+    while improved:
+        improved = False
+
+        for i in range(1, len(tour) - 2):
+            for j in range(i + 1, len(tour)):
+
+                # Create a new possible tour
+                new_tour = tour.copy()
+                new_tour[i:j] = tour[j-1:i-1:-1]
+                if tour_length(new_tour) < tour_length(best):
+                    best = new_tour
+                    improved = True
+    return best
+
+
+def nearest_neighbour(cities, current_city=None, visited=None):
+    if visited is None:
+        visited = []
+
+    if current_city is None:
+        current_city = next(iter(cities))
+
     if len(visited) == len(cities):
         return visited
 
     nn = None
-
-    if current_city is None:
-        current_city = next(iter(cities))
 
     # Look for the current city its nearest neighbour
     for city in cities:
@@ -78,8 +100,9 @@ def plot_tsp(algorithm, cities):
     # apply a TSP algorithm to cities, print the time it took, and plot the resulting tour.
     t0 = time.process_time()
     tour = algorithm(cities)
-    print(tour)
+    tour = two_opt(tour)
     t1 = time.process_time()
+
     print("{} city tour with length {:.1f} in {:.3f} secs for {}"
           .format(len(tour), tour_length(tour), t1 - t0, algorithm.__name__))
     print("Start plotting ...")
@@ -87,7 +110,23 @@ def plot_tsp(algorithm, cities):
 
 
 # give a demo with 10 cities using brute force
-plot_tsp(try_all_tours, make_cities(10))
-plot_tsp(nearest_neighbour, make_cities(10))     # 100 - (2521.9 / 3230.6 * 100) = 21.9% difference
-# plot_tsp(nearest_neighbour, make_cities(500))  # Time: 1.922 seconds, length: 20457
+# plot_tsp(try_all_tours, make_cities(10))
+plot_tsp(nearest_neighbour, make_cities(10))  # 100 - (2521.9 / 3230.6 * 100) = 21.9% difference
+# plot_tsp(nearest_neighbour, make_cities(500))  # Time: 1.922 seconds, length: 20457, About 4*N crossings
+# Without two-opt: 20980 in 0.750 seconds
+# With two-opt: 20672 in 89.375 seconds
+# 100 - (20672 / 20980 * 100) = 1.4% improvement
+'''
+#y1 = a * x + b
+#y2 = c * x + d
 
+if a != c:
+    
+    if a.x1 < b.x2 and a.x2 > b.x1 and a.y1 < b.y2 and a.y2 > b.y1:
+        return true
+        
+else:
+    return false
+'''
+
+# Tijdcomplexiteit voor 2opt: O(n^2)

@@ -54,12 +54,12 @@ class MainApp(tk.Frame):
         self.update_idletasks() # redraw widgets
         
     def do_move(self):
-        direction = model.get_random_move()
-        # direction = model.get_expectimax_move(self.board)
+        direction = model.get_expectimax_move(self.board, 10, True)
+
         if model.move_exists(self.board):
-            self.board = model.play_move(self.board, direction)
+            self.board = model.play_move(self.board, direction[0])
             self.update_grid_cells()           # redraw grid
-            self.root.after(100, self.do_move)  # reschedule do_move in 0.1 second
+            self.root.after(10, self.do_move)  # reschedule do_move in 0.1 second
         else:
             # game over, no reschedule
             if model.game_state(self.board) == 'win':
@@ -67,6 +67,7 @@ class MainApp(tk.Frame):
             else:
                 self.root.title("You lose!")
             return
+
 
 # create and start GUI
 root = tk.Tk()  # create root window
