@@ -236,7 +236,9 @@ def minimax(player, board, depth, evaluate):
     if not moves:
         if not any_legal_move(opponent(player), board):
             return final_value(player, board), None
+
         return value(board), None
+
     return max((value(make_move(m, player, list(board))), m) for m in moves)
 
 # Function to start minimax
