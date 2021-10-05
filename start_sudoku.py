@@ -1,4 +1,5 @@
 import time
+import copy
 
 #   1 2 3 4 .. 9
 # A
@@ -26,19 +27,23 @@ unit_list = ([cross(r, cols) for r in rows] +                             # 9 ro
 units = dict((s, [u for u in unit_list if s in u]) for s in cells)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in cells)
 
-def test():
+def test(grid):
     # a set of tests that must pass
     assert len(cells) == 81
-    assert len(unitlist) == 27
+    assert len(unit_list) == 27
     assert all(len(units[s]) == 3 for s in cells)
     assert all(len(peers[s]) == 20 for s in cells)
-    assert units['C2'] == [['A2', 'B2', 'C2', 'D2', 'E2', 'F2', 'G2', 'H2', 'I2'],
-                           ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9'],
-                           ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3']]
+    assert units['C2'] == [
+        ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9'],
+        ['A2', 'B2', 'C2', 'D2', 'E2', 'F2', 'G2', 'H2', 'I2'],
+        ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3']
+    ]
     assert peers['C2'] == set(['A2', 'B2', 'D2', 'E2', 'F2', 'G2', 'H2', 'I2',
                                'C1', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9',
                                'A1', 'A3', 'B1', 'B3'])
-    print ('All tests pass.')
+    
+    # print ('All tests pass.')
+    return True
 
 def display(grid):
     # grid is a dict of {cell: string}, e.g. grid['A1'] = '1234'
@@ -47,7 +52,7 @@ def display(grid):
         for c in cols:
             v = grid[r+c]
             # avoid the '123456789'
-            if v == '123456789': 
+            if len(v) > 1: 
                 v = '.'
             print (''.join(v), end=' ')
             if c == '3' or c == '6': print('|', end='')
@@ -77,10 +82,53 @@ def no_conflict(grid, c, val):
            return False # conflict
     return True
 
-def solve(grid):
+def done(grid):
+    done = True
+    for value in grid.values():
+        if len(value) > 1 or value == ".":
+            done = False
+
+    return done
+
+# def solve(grid):
     # backtracking search for a solution (DFS)
     # your code here
-    pass
+    # dict represents a tree: a dictionary variable:value
+    # pass
+
+def solve(dict):
+    # if not test(dict):
+    #     return False
+    time.sleep(0.1)
+    print(display(dict))
+    if done(dict):
+        # found a solution!
+        print(display(dict))
+        return True
+
+    for key in dict.keys():
+        # try them all
+        if len(dict[key]) > 1:
+            for v in dict[key]:
+                if key == "A1" and int(v) == 7:
+                    print(v)
+                if no_conflict(dict, key, v):
+                    # assign value to variable
+                    oldValue = dict[key]
+                    dict[key] = v
+                    if solve(dict): # recursive call
+                        # found a solution
+                        # if key == "A1":
+                            # print('solved')
+                        return True
+                    # undo assignment
+                    dict[key] = oldValue.replace(v, '') + str(v)
+        
+        # if key == "A1":
+            # print("test")
+
+    # didn't find a solution, go back up
+    return False
 
 # minimum nr of clues for a unique solution is 17
 slist = [None for x in range(20)]
@@ -105,14 +153,17 @@ slist[17]= '..5...987.4..5...1..7......2...48....9.1.....6..2.....3..6..2.......
 slist[18]= '3.6.7...........518.........1.4.5...7.....6.....2......2.....4.....8.3.....5.....'
 slist[19]= '1.....3.8.7.4..............2.3.1...........958.........5.6...7.....8.2...4.......'
 
-for i,sudo in enumerate(slist):
-    print('*** sudoku {0} ***'.format(i))
-    print(sudo)
-    d = parse_string_to_dict(sudo)
-    start_time = time.time()
-    solve(d)
-    end_time = time.time()
-    hours, rem = divmod(end_time-start_time, 3600)
-    minutes, seconds = divmod(rem, 60)
-    print("duration [hh:mm:ss.ddd]: {:0>2}:{:0>2}:{:06.3f}".format(int(hours),int(minutes),seconds))
-    print()
+if __name__ == "__main__":
+    for i,sudo in enumerate(slist):
+        print('*** sudoku {0} ***'.format(i))
+        dict = parse_string_to_dict(sudo)
+        start_time = time.time()
+        # print(display(dict))
+        # print(dict)
+        solve(dict)
+        end_time = time.time()
+        hours, rem = divmod(end_time-start_time, 3600)
+        minutes, seconds = divmod(rem, 60)
+        print("duration [hh:mm:ss.ddd]: {:0>2}:{:0>2}:{:06.3f}".format(int(hours),int(minutes),seconds))
+        print()
+        break
