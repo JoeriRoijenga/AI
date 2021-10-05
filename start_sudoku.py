@@ -1,5 +1,6 @@
 import time
 import copy
+import sys
 
 #   1 2 3 4 .. 9
 # A
@@ -89,13 +90,54 @@ def done(grid):
 
     return done
 
-# def solve(grid):
-    # backtracking search for a solution (DFS)
-    # your code here
-    # dict represents a tree: a dictionary variable:value
-    # pass
+def solve_arc(grid):
+    if done(grid):
+        # found a solution!
+        print(display(grid))
+        return True
 
-def solve(dict):
+    for key in grid.keys():
+        # try them all
+        if len(grid[key]) > 1:
+            for v in grid[key]:
+    
+                # if assignment is possible
+                if no_conflict(grid, key, v):
+                    new_grid = copy.copy(grid)
+                    # assign value to variable
+                    new_grid[key] = v
+            
+                    if make_arc_concistent(new_grid, key, v):
+                        if solve_arc(new_grid): # recursive call
+                            # found a solution!
+                            return True
+        
+        if len(grid[key]) > 1:
+            return False
+    
+    # didn't find a solution, go back up
+    return False
+
+def make_arc_concistent(grid, c, v):
+    grid_changed = False
+
+    for p in peers[c]:
+        if v in grid[p]:
+            if len(grid[p]) <= 1:
+                return False
+            else:
+                grid[p] = grid[p].replace(v, '')
+                grid_changed = True
+        
+        
+    if grid_changed:
+        for p in peers[c]:
+            if len(grid[p]) == 1:
+                if not make_arc_concistent(grid, p, grid[p]):
+                    return False
+    return True
+
+def solve_dfs(dict):
     if done(dict):
         # found a solution!
         print(display(dict))
@@ -109,7 +151,7 @@ def solve(dict):
                     # assign value to variable
                     oldValue = dict[key]
                     dict[key] = v
-                    if solve(dict): # recursive call
+                    if solve_dfs(dict): # recursive call
                         # found a solution
                         return True
                     # undo assignment
@@ -145,13 +187,25 @@ slist[18]= '3.6.7...........518.........1.4.5...7.....6.....2......2.....4.....8
 slist[19]= '1.....3.8.7.4..............2.3.1...........958.........5.6...7.....8.2...4.......'
 
 if __name__ == "__main__":
+    total_start_time = time.time()
+
     for i,sudo in enumerate(slist):
         print('*** sudoku {0} ***'.format(i))
         d = parse_string_to_dict(sudo)
         start_time = time.time()
-        solve(d)
+
+        if len(sys.argv) > 1:
+            solve_dfs(d)
+        else: 
+            solve_arc(d)
+
         end_time = time.time()
         hours, rem = divmod(end_time-start_time, 3600)
         minutes, seconds = divmod(rem, 60)
-        print("duration [hh:mm:ss.ddd]: {:0>2}:{:0>2}:{:06.3f}".format(int(hours),int(minutes),seconds))
+        print("duration: {:0>2}:{:0>2}:{:06.3f}".format(int(hours),int(minutes),seconds))
         print()
+    
+    total_end_time = time.time()
+    hours, rem = divmod(total_end_time-total_start_time, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("total duration: {:0>2}:{:0>2}:{:06.3f}".format(int(hours),int(minutes),seconds))
