@@ -17,6 +17,7 @@ triominoes = [np.array(piece) for piece in [
     ]
 ]
 
+
 def make_matrix(triominoes):
 
     # create and return matrix as input for alg-x
@@ -81,13 +82,22 @@ def prepare(mx):
 
     return halt_fl, row_valid, col_valid, row_has_1_at, col_has_1_at
 
+
 def cover(r, row_valid, col_valid, row_has_1_at, col_has_1_at):
     # given a row r:
     #   cover all cols that have a 1 in row r
     #   cover all rows r' that intersect/overlap with row r
     # returns row_valid, col_valid
 
-    pass
+    row_valid[r] = 0
+    col_valid[r] = 0
+
+    # Search for every index that has a 1 in the selected row
+    for position in col_has_1_at[r]:
+        row_valid[position] = 0
+
+    return row_valid, col_valid
+
 
 def print_solution(solution, row_has_1_at):
     # place triominoes in matrix D 3 rows x 4 cols
@@ -109,9 +119,53 @@ def print_solution(solution, row_has_1_at):
     for i in D:
         print(i)
 
+
 def solve(row_valid, col_valid, row_has_1_at, col_has_1_at, solution):
     # using Algoritm X, find all solutions (= set of rows) given valid/uncovered rows and cols
-    pass
+    found_one = False
+    for row in row_valid:
+        if row == 1:
+            found_one = True
+
+    if found_one:
+        # Get the col with the lowest 1's
+        if len(solution) == 0:
+            lowest_index = 0
+            current_index = 0
+            lowest_ones = 100000
+            for col in col_has_1_at:
+                if len(col) < lowest_ones:
+                    lowest_index = current_index
+                    lowest_ones = len(col)
+
+                current_index += 1
+
+            solution.append(lowest_index)
+            row_valid, col_valid = cover(lowest_index, row_valid, col_valid, row_has_1_at, col_has_1_at)
+
+        index = 0
+        for col in col_valid:
+
+            # If the current col has a one, select its row
+            if col_valid[index] == 1:
+                old_row_valid = row_valid
+                old_row_has_1_at = row_has_1_at
+
+                row_valid, col_valid = cover(index, row_valid, col_valid, row_has_1_at, col_has_1_at)
+                solution.append(index)
+
+                if solve(row_valid, col_valid, row_has_1_at, col_has_1_at, solution):
+                    return True
+
+                solution.remove(index)
+                row_valid = old_row_valid
+                row_has_1_at = old_row_has_1_at
+
+            index += 1
+
+        return False
+
+    print(solution)
 
 
 mx = make_matrix(triominoes)
