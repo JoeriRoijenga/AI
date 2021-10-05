@@ -42,7 +42,6 @@ def test(grid):
                                'C1', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9',
                                'A1', 'A3', 'B1', 'B3'])
     
-    # print ('All tests pass.')
     return True
 
 def display(grid):
@@ -97,10 +96,6 @@ def done(grid):
     # pass
 
 def solve(dict):
-    # if not test(dict):
-    #     return False
-    time.sleep(0.1)
-    print(display(dict))
     if done(dict):
         # found a solution!
         print(display(dict))
@@ -110,22 +105,18 @@ def solve(dict):
         # try them all
         if len(dict[key]) > 1:
             for v in dict[key]:
-                if key == "A1" and int(v) == 7:
-                    print(v)
                 if no_conflict(dict, key, v):
                     # assign value to variable
                     oldValue = dict[key]
                     dict[key] = v
                     if solve(dict): # recursive call
                         # found a solution
-                        # if key == "A1":
-                            # print('solved')
                         return True
                     # undo assignment
                     dict[key] = oldValue.replace(v, '') + str(v)
-        
-        # if key == "A1":
-            # print("test")
+
+        if len(dict[key]) > 1:
+            return False
 
     # didn't find a solution, go back up
     return False
@@ -156,14 +147,11 @@ slist[19]= '1.....3.8.7.4..............2.3.1...........958.........5.6...7.....8
 if __name__ == "__main__":
     for i,sudo in enumerate(slist):
         print('*** sudoku {0} ***'.format(i))
-        dict = parse_string_to_dict(sudo)
+        d = parse_string_to_dict(sudo)
         start_time = time.time()
-        # print(display(dict))
-        # print(dict)
-        solve(dict)
+        solve(d)
         end_time = time.time()
         hours, rem = divmod(end_time-start_time, 3600)
         minutes, seconds = divmod(rem, 60)
         print("duration [hh:mm:ss.ddd]: {:0>2}:{:0>2}:{:06.3f}".format(int(hours),int(minutes),seconds))
         print()
-        break
