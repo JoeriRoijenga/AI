@@ -90,11 +90,13 @@ def cover(r, row_valid, col_valid, row_has_1_at, col_has_1_at):
     # returns row_valid, col_valid
 
     row_valid[r] = 0
-    col_valid[r] = 0
 
     # Search for every index that has a 1 in the selected row
-    for position in col_has_1_at[r]:
-        row_valid[position] = 0
+    for position in row_has_1_at[r]:
+        col_valid[position] = 0
+
+        for row in col_has_1_at[position]:
+            row_valid[row] = 0
 
     return row_valid, col_valid
 
@@ -120,52 +122,47 @@ def print_solution(solution, row_has_1_at):
         print(i)
 
 
+def lowest_col(col_has_1_at, col_valid):
+    lowest_index = 0
+    current_index = 0
+    lowest_ones = 100000
+
+    for col in col_has_1_at:
+        if len(col) < lowest_ones and col_valid[current_index] == 1:
+            lowest_index = current_index
+            lowest_ones = len(col)
+
+        current_index += 1
+
+    return lowest_index
+
+
 def solve(row_valid, col_valid, row_has_1_at, col_has_1_at, solution):
     # using Algoritm X, find all solutions (= set of rows) given valid/uncovered rows and cols
     found_one = False
-    for row in row_valid:
+
+    for row in col_valid:
         if row == 1:
             found_one = True
+            break
 
-    if found_one:
-        # Get the col with the lowest 1's
-        if len(solution) == 0:
-            lowest_index = 0
-            current_index = 0
-            lowest_ones = 100000
-            for col in col_has_1_at:
-                if len(col) < lowest_ones:
-                    lowest_index = current_index
-                    lowest_ones = len(col)
+    if found_one is False:
+        print_solution(solution, row_has_1_at)
 
-                current_index += 1
+    lowest_index = lowest_col(col_has_1_at, col_valid)
 
-            solution.append(lowest_index)
-            row_valid, col_valid = cover(lowest_index, row_valid, col_valid, row_has_1_at, col_has_1_at)
+    for row in col_has_1_at[lowest_index]:
+        old_row_valid = row_valid[:]
+        old_col_valid = col_valid[:]
 
-        index = 0
-        for col in col_valid:
+        if row_valid[row] == 0:
+            continue
 
-            # If the current col has a one, select its row
-            if col_valid[index] == 1:
-                old_row_valid = row_valid
-                old_row_has_1_at = row_has_1_at
-
-                row_valid, col_valid = cover(index, row_valid, col_valid, row_has_1_at, col_has_1_at)
-                solution.append(index)
-
-                if solve(row_valid, col_valid, row_has_1_at, col_has_1_at, solution):
-                    return True
-
-                solution.remove(index)
-                row_valid = old_row_valid
-                row_has_1_at = old_row_has_1_at
-
-            index += 1
-
-        return False
-
-    print(solution)
+        row_valid, col_valid = cover(row, row_valid, col_valid, row_has_1_at, col_has_1_at)
+        solution.append(row)
+        solve(row_valid, col_valid, row_has_1_at, col_has_1_at, solution)
+        row_valid = old_row_valid
+        col_valid = old_col_valid
 
 
 mx = make_matrix(triominoes)
