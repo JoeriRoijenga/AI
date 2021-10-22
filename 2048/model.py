@@ -4,10 +4,10 @@ import math
 
 MAX_DEPTH = 3
 
-weigths = [  0,  0,  1,  3,
-             0,  1,  3,  5,
-             1,  3,  5,  15,
-             3,  5,  15, 30]
+weigths = [  128,  64,  0,  0,
+             256,  32,  2,  0,
+             512,  16, 2,  0,
+             1024,  8,  4, 0]
 
 
 def merge_left(b):
@@ -169,7 +169,7 @@ def get_random_move():
 
 def get_expectimax_move(b, depth, player):
     if depth == 0:
-        return -1, (heuristic_monotonicity(b) * .8) + (heuristic_empty_cells(b) * 3.4) + (heuristic_corner(b) * 5)
+        return -1, heuristic_corner(b)
 
     if player is True:
         best_value = -100000
@@ -179,19 +179,38 @@ def get_expectimax_move(b, depth, player):
             temp_board = b.copy()
             temp_board = play_move(temp_board, choice)
 
-            _, value = get_expectimax_move(temp_board, depth - 1, False)
+            if move_exists(temp_board):
 
-            if value > best_value:
-                best_value = value
-                best_move = choice
+                _, value = get_expectimax_move(temp_board, depth - 1, False)
+
+                if value > best_value:
+                    best_value = value
+                    best_move = choice
 
         return best_move, best_value
     else:
         best_value = 100000
         temp_b = b.copy()
+        final_score = 0
 
-        _, value = get_expectimax_move(temp_b, depth - 1, True)
-        final_score = min(value, best_value)
+        # Create a random 2 on the board
+        for x in range(0, len(temp_b)):
+            for y in range(0, len(temp_b)):
+                if temp_b[x][y] == 0:
+                    # Found an empty position, now place a two and
+                    # a four to found out its score
+                    temp_b[x][y] = 2
+                    _, value = get_expectimax_move(temp_b, depth - 1, True)
+                    current_value = value * .9
+
+                    # now make a four on this position
+                    temp_b[x][y] = 4
+                    _, value = get_expectimax_move(temp_b, depth - 1, True)
+                    current_value += value * 0.1
+
+                    if current_value < best_value:
+                        best_value = current_value
+                        final_score = best_value
 
         return -1, final_score
 
