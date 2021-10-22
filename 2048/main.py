@@ -55,6 +55,8 @@ class MainApp(tk.Frame):
         
     def do_move(self):
         direction = model.get_expectimax_move(self.board, 4, True)
+        # print(model.move_exists(self.board))
+        # print(direction[0])
 
         if model.move_exists(self.board):
             self.board = model.play_move(self.board, direction[0])

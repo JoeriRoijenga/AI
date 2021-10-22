@@ -4,10 +4,10 @@ import math
 
 MAX_DEPTH = 3
 
-weigths = [  128,  64,  0,  0,
-             256,  32,  2,  0,
-             512,  16, 2,  0,
-             1024,  8,  4, 0]
+weigths = [128, 64, 0, 0,
+           256, 32, 2, 0,
+           512, 16, 2, 0,
+           1024, 8, 4, 0]
 
 
 def merge_left(b):
@@ -167,6 +167,17 @@ def get_random_move():
     return random.choice(list(MERGE_FUNCTIONS.keys())), -1
 
 
+def get_possible_moves(b):
+    possible_moves = []
+    for move in MERGE_FUNCTIONS.keys():
+        new_b = play_move(b, move)
+
+        if new_b != b:
+            possible_moves.append(move)
+
+    return possible_moves
+
+
 def get_expectimax_move(b, depth, player):
     if depth == 0:
         return -1, heuristic_corner(b)
@@ -175,17 +186,27 @@ def get_expectimax_move(b, depth, player):
         best_value = -100000
         best_move = ""
 
-        for choice in MERGE_FUNCTIONS.keys():
+        for choice in get_possible_moves(b):
             temp_board = b.copy()
-            temp_board = play_move(temp_board, choice)
+            # temp_board = play_move(temp_board, choice)
 
-            if move_exists(temp_board):
+            if choice == 'left':
+                temp_board = merge_left(temp_board)
 
-                _, value = get_expectimax_move(temp_board, depth - 1, False)
+            if choice == 'right':
+                temp_board = merge_right(temp_board)
 
-                if value > best_value:
-                    best_value = value
-                    best_move = choice
+            if choice == 'up':
+                temp_board = merge_up(temp_board)
+
+            if choice == 'down':
+                temp_board = merge_down(temp_board)
+
+            _, value = get_expectimax_move(temp_board, depth - 1, False)
+
+            if value > best_value:
+                best_value = value
+                best_move = choice
 
         return best_move, best_value
     else:
@@ -197,6 +218,7 @@ def get_expectimax_move(b, depth, player):
         for x in range(0, len(temp_b)):
             for y in range(0, len(temp_b)):
                 if temp_b[x][y] == 0:
+
                     # Found an empty position, now place a two and
                     # a four to found out its score
                     temp_b[x][y] = 2
@@ -216,17 +238,13 @@ def get_expectimax_move(b, depth, player):
 
 
 def heuristic_corner(b):
-    total_value = 0
-    index = 0
+    snake = []
+    for i, col in enumerate(zip(*b)):
+        snake.extend(reversed(col) if i % 2 == 0 else col)
 
-    # Hold all the most valuable tiles in one corner
-    for row in b:
-        for item in row:
-            if item != 0:
-                total_value = total_value + (weigths[index] * 2)
-            index += 1
-
-    return total_value
+    m = max(snake)
+    return sum(x / 10 ** n for n, x in enumerate(snake)) - \
+           math.pow((b[3][0] != m) * abs(b[3][0] - m), 2)
 
 
 def heuristic_empty_cells(b):
@@ -249,11 +267,11 @@ def heuristic_monotonicity(b):
                 if neighbour == b[x][y]:
                     total_value += 15
 
-                if neighbour == b[x][y] / 2:
-                    total_value += 10
+                # if neighbour == b[x][y] / 2:
+                    # total_value += 10
 
-                if neighbour == b[x][y] / 4:
-                    total_value += 5
+                # if neighbour == b[x][y] / 4:
+                    # total_value += 5
 
     return total_value
 
@@ -262,10 +280,10 @@ def get_neighbours(matrix, x, y):
     result = []
     for rowAdd in range(-1, 2):
         new_row = x + rowAdd
-        if 0 <= new_row <= len(matrix)-1:
+        if 0 <= new_row <= len(matrix) - 1:
             for col_add in range(-1, 2):
                 new_col = y + col_add
-                if 0 <= new_col <= len(matrix)-1:
+                if 0 <= new_col <= len(matrix) - 1:
                     if new_col == y and new_row == x:
                         continue
                     result.append(matrix[new_col][new_row])
