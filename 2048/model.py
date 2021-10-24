@@ -2,18 +2,12 @@ import random
 import itertools
 import math
 import numpy as np
-TEMPLATE = [[0.135, 0.121, 0.102, 0.0999],
+weigths = [[0.135, 0.121, 0.102, 0.0999],
             [0.0997, 0.088, 0.076, 0.0724],
             [0.0606, 0.0562, 0.0371, 0.0161],
             [0.0125, 0.0099, 0.0057, 0.0033]]
 
 MAX_DEPTH = 3
-
-weigths = [128, 64, 0, 0,
-           256, 32, 2, 0,
-           512, 16, 2, 0,
-           1024, 8, 4, 0]
-
 
 def merge_left(b):
     # merge the board left
@@ -185,7 +179,7 @@ def get_possible_moves(b):
 
 def get_expectimax_move(b, depth, player):
     if depth == 0:
-        return -1, evalgrid(b) + heuristic_corner_two(b)
+        return -1, eval_empty_cells(b) + eval_weights(b)
 
     if player is True:
         best_value = -100000
@@ -242,19 +236,7 @@ def get_expectimax_move(b, depth, player):
         return -1, final_score
 
 
-def heuristic_corner(b):
-    snake = []
-    for i, col in enumerate(zip(*b)):
-        snake.extend(reversed(col) if i % 2 == 0 else col)
-
-    m = max(snake)
-    return sum(x / 10 ** n for n, x in enumerate(snake)) - \
-           math.pow((b[3][0] != m) * abs(b[3][0] - m), 2)
-
-
-def heuristic_corner_two(b):
-    score = 0
-    index = 0
+def eval_empty_cells(b):
     board_sum = 0
     amount = 0
 
@@ -266,54 +248,8 @@ def heuristic_corner_two(b):
 
     score = board_sum / amount
 
-    '''
-    for row in b:
-        for value in row:
-            if value != 0:
-                score = score + (weigths[index] * 2)
-            index += 1
-
-    score += heuristic_monotonicity(b)
-    '''
     return score
 
 
-def evalgrid(grid):
-    return np.sum(np.array(grid) * TEMPLATE)
-
-
-def heuristic_empty_cells(b):
-    # Try to keep as many empty cells as possible
-    total_value = 0
-    for x in range(4):
-        for y in range(4):
-            if b[x][y] == 0:
-                total_value += 8
-
-    return total_value
-
-
-def heuristic_monotonicity(b):
-    total_value = 0
-
-    for x in range(4):
-        for y in range(4):
-            for neighbour in get_neighbours(b, x, y):
-                if neighbour == b[x][y] / 2:
-                    total_value += total_value * 2
-
-    return total_value
-
-
-def get_neighbours(matrix, x, y):
-    result = []
-    for rowAdd in range(-1, 2):
-        new_row = x + rowAdd
-        if 0 <= new_row <= len(matrix) - 1:
-            for col_add in range(-1, 2):
-                new_col = y + col_add
-                if 0 <= new_col <= len(matrix) - 1:
-                    if new_col == y and new_row == x:
-                        continue
-                    result.append(matrix[new_col][new_row])
-    return result
+def eval_weights(b):
+    return np.sum(np.array(b) * weigths)
